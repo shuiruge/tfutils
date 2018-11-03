@@ -22,7 +22,7 @@ class MonteCarloIntegral(object):
   @property
   def shape(self):
     return self.value.shape
-  
+
   @property
   def dtype(self):
     return self.value.dtype

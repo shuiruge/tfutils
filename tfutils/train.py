@@ -1,9 +1,13 @@
 import os
+import numpy as np
 import tensorflow as tf
 from tensorflow.python.lib.io import file_io
 
 
-def clip(gradient, min_clip_value=-1e+0,  max_clip_value=1e+0):
+ALL_VARS = None
+
+
+def clip(gradient, min_clip_value=-1e+0, max_clip_value=1e+0):
   """
   Examples:
   >>> loss = ...
@@ -32,16 +36,16 @@ def get_ckpt_name(scope):
   """
   if scope is None:
     return 'all_scopes.ckpt'
-  return  '{}_scope.ckpt'.format(scope)
+  return '{}_scope.ckpt'.format(scope)
 
 
 def save_variables(session, scope, save_dir):
   """Saves the trained variables within the scope from session
   to disk.
-    
+
   Args:
     session: An instance of `tf.Session`.
-    scope: String or `None`.
+    scope: String or `ALL_VARS`.
     save_dir: String. This directory can be non-exist. If not exists,
       then calling this function will create one.
   """
@@ -58,16 +62,16 @@ def save_variables(session, scope, save_dir):
 def restore_variables(session, scope, save_dir):
   """Restores the pre-trained variables within the scope from disk
   to session. Cooperating with the function `save_vars`.
-  
+
   Args:
     session: An instance of `tf.Session`.
-    scope: String.
+    scope: String or `ALL_VARS`.
     save_dir: String. This directory shall exist.
   """
   pretrained_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES,
-                                        scope=scope)
+                                      scope=scope)
   saver = tf.train.Saver(pretrained_vars)
-    
+
   ckpt_path = os.path.join(save_dir, get_ckpt_name(scope))
   saver.restore(session, ckpt_path)
 
@@ -90,11 +94,11 @@ def create_frugal_session(gpu_allocation=0.1):
 def smear(values, window_size):
     """Auxillary function for plotting. If the plot are bushing,
     e.g. plot of loss-values, smearing is called for.
-    
+
     Args:
         values: List of real numbers.
         window_size: Positive integer.
-    
+
     Returns:
         List of real numbers.
     """
@@ -111,7 +115,7 @@ def smear(values, window_size):
         smeared.append(np.mean(values_in_window))
     return smeared
 
- 
+
 def ensure_directory(directory):
   """Checks if the directory exists, and if not so, create one.
 
