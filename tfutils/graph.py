@@ -2,9 +2,18 @@ import collections
 import numpy as np
 import tensorflow as tf
 from IPython.display import display, HTML
+try:
+  import tensorflow_probability as tfp
+  tfd = tfp.distributions
+except ImportError:
+  tfd = tf.contrib.distributions
 
 
-def get_dependent_variables(tensor):
+def is_tensor(x):
+  return isinstance(x, (tf.Tensor, tf.SparseTensor, tf.Variable))
+
+
+def _get_dependent_variables(tensor):
   """Returns all variables that the tensor `tensor` depends on.
 
   Forked from: https://stackoverflow.com/a/42861919/1218716
@@ -37,6 +46,44 @@ def get_dependent_variables(tensor):
   return dependent_vars
 
 
+def get_dist_parameters(dist):
+  """
+  Args:
+    dist: An instance of `tfd.Distribution`.
+
+  Returns:
+    List of tensors.
+  """
+  return [value for name, value in dist.parameters.items()
+          if is_tensor(value)]
+
+
+def get_dependent_variables(tensor_or_dist):
+  """Returns all variables that the tensor `tensor` depends on.
+
+  Forked from: https://stackoverflow.com/a/42861919/1218716
+
+  Args:
+    tensor_or_dist: Tensor or distribution.
+
+  Returns:
+    List of variables.
+  """
+  if is_tensor(tensor_or_dist):
+    return _get_dependent_variables
+
+  elif isinstance(tensor_or_dist, tfd.Distribution):
+    dependent_vars = []
+    dist_params = get_dist_parameters(tensor_or_dist)
+    for param in dist_params:
+      dependent_vars += _get_dependent_variables(param)
+    return dependent_vars
+
+  else:
+    raise TypeError('Arg `tensor_or_dist` should either be tensor or '
+                    'distribution, but a {}.'.format(type(tensor_or_dist)))
+
+
 def strip_consts(graph_def, max_const_size=32):
   """Strip large constant values from graph_def. The auxillary function of
   the `show_graph()`."""
@@ -48,8 +95,8 @@ def strip_consts(graph_def, max_const_size=32):
       tensor = n.attr['value'].tensor
       size = len(tensor.tensor_content)
       if size > max_const_size:
-        tensor.tensor_content = bytes('<stripped %d bytes>' % size,
-                                      'utf-8')
+        tensor.tensor_content = bytes(
+            '<stripped {} bytes>'.format(size), 'utf-8')
   return strip_def
 
 
@@ -80,7 +127,8 @@ def show_graph(graph_def, max_const_size=32):
           document.getElementById("{id}").pbtxt = {data};
         }}
       </script>
-      <link rel="import"
+      <link
+        rel="import"
         href="https://tensorboard.appspot.com/tf-graph-basic.build.html"
         onload=load()>
       <div style="height:600px">
