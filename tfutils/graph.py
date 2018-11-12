@@ -70,7 +70,7 @@ def get_dependent_variables(tensor_or_dist):
     List of variables.
   """
   if is_tensor(tensor_or_dist):
-    return _get_dependent_variables
+    return _get_dependent_variables(tensor_or_dist)
 
   elif isinstance(tensor_or_dist, tfd.Distribution):
     dependent_vars = []
