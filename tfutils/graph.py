@@ -46,7 +46,7 @@ def _get_dependent_variables(tensor):
   return dependent_vars
 
 
-def get_dist_parameters(dist):
+def get_dist_tensors(dist):
   """
   Args:
     dist: An instance of `tfd.Distribution`.
@@ -74,7 +74,7 @@ def get_dependent_variables(tensor_or_dist):
 
   elif isinstance(tensor_or_dist, tfd.Distribution):
     dependent_vars = []
-    dist_params = get_dist_parameters(tensor_or_dist)
+    dist_params = get_dist_tensors(tensor_or_dist)
     for param in dist_params:
       dependent_vars += _get_dependent_variables(param)
     return dependent_vars
