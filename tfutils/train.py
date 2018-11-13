@@ -1,7 +1,6 @@
 import os
 import numpy as np
 import tensorflow as tf
-from tensorflow.python.lib.io import file_io
 
 
 ALL_VARS = None
@@ -121,11 +120,5 @@ def ensure_directory(directory):
 
   Args:
     directory: String.
-
-  Returns:
-    Boolean, being `True` if exists, otherwise `False`.
   """
-  if not file_io.file_exists(directory):
-    file_io.recursive_create_dir(directory)
-    return True
-  return False
+  os.makedirs(directory, exist_ok=True)
