@@ -2,72 +2,55 @@ import numpy as np
 import tensorflow as tf
 
 
+EPSILON = 1e-8
+
+
 class MonteCarloIntegral(object):
   """
   Args:
     value: Tensor.
-    error: Tensor, with the same shape and dtype as `value`.
+    variance: Tensor, with the same shape and dtype as `value`.
 
   Raises:
-    ValueError: The shape or the dtype of `value` and `error` is not the same.
+    ValueError: The shape or the dtype of `value` and `variance` is
+      not the same.
   """
 
-  def __init__(self, value, error):
-    if value.shape != error.shape or value.dtype != error.dtype:
+  def __init__(self, value, variance):
+    value_errors = (value.shape != variance.shape,
+                    value.dtype != variance.dtype)
+    if any(value_errors):
       raise ValueError('The shape or the dtype of `value` and '
-                       '`error` is not the same.')
+                       '`variance` is not the same.')
 
     self.value = value
-    self.error = error
+    self.variance = variance
 
-  @property
-  def shape(self):
-    return self.value.shape
-
-  @property
-  def dtype(self):
-    return self.value.dtype
+    self.shape = self.value.shape
+    self.dtype = self.value.dtype
+    self.error = tf.sqrt(self.variance)
+    self.relative_error = self.error / (self.value + EPSILON)
 
   def __add__(self, other):
+    """
+    C.f.: https://en.wikipedia.org/wiki/Sum_of_normally_distributed_random_variables  # noqa: E501
+
+    Args:
+      other: A `MonteCarloIntegral` instance.
+
+    Returns:
+      A (new) `MonteCarloIntegral` instance.
+
+    Raises:
+      TypeError: If `other` is not a `MonteCarloIntegral` instance.
+    """
     if not isinstance(other, MonteCarloIntegral):
       raise TypeError('Arg `other` should be an instance of '
-                      '`MonteCarloIntegral, but {}'.format(type(other)))
+                      '`MonteCarloIntegral`, but being a {}'
+                      .format(type(other)))
 
     return MonteCarloIntegral(value=(self.value + other.value),
-                              error=(self.error + other.error))
-
-
-def mc_mean_with_nan(samples):
-  """Returns the Monte-Carlo-mean of `samples` wherein there may be NaN.
-
-  This function is useful at the starting epoch of training, wherein the
-  initialized distributions may be far from compatible with some of the
-  provided data.
-
-  However, this function may hide the numerical instability that is
-  intrinsic to the model to be trained. So, it is NOT suggested to use
-  this function!
-
-  Args:
-    samples: Tensor with shape `[n_samples] + rest_shapes`, for any
-      `rest_shapes`.
-
-  Returns:
-    Tensor with shape `rest_shapes`.
-  """
-  # [n_samples] + rest_shape
-  finite_sample_mask = tf.where(tf.is_nan(samples),
-                                tf.zeros_like(samples),
-                                tf.ones_like(samples))
-  # [1] + rest_shape
-  finite_sample_count = tf.reduce_sum(finite_sample_mask,
-                                      axis=0, keepdims=True)
-  # [n_samples] + rest_shape
-  finite_samples = tf.where(tf.is_nan(samples),
-                            tf.zeros_like(samples),
-                            samples)
-  return tf.reduce_sum(finite_samples / (finite_sample_count + 1e-8),
-                       axis=0)
+                              variance=(self.variance + other.variance))
 
 
 def monte_carlo_integrate(
@@ -128,4 +111,4 @@ def monte_carlo_integrate(
       n_samples = tf.constant(n_samples, dtype=integrands.dtype)
 
     mean, var = tf.nn.moments(integrands, axes)
-    return MonteCarloIntegral(value=mean, error=tf.sqrt(var / n_samples))
+    return MonteCarloIntegral(value=mean, variance=(var / n_samples))
