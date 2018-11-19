@@ -28,6 +28,14 @@ class MonteCarloIntegral(object):
   def dtype(self):
     return self.value.dtype
 
+  def __add__(self, other):
+    if not isinstance(other, MonteCarloIntegral):
+      raise TypeError('Arg `other` should be an instance of '
+                      '`MonteCarloIntegral, but {}'.format(type(other)))
+
+    return MonteCarloIntegral(value=(self.value + other.value),
+                              error=(self.error + other.error))
+
 
 def mc_mean_with_nan(samples):
   """Returns the Monte-Carlo-mean of `samples` wherein there may be NaN.
