@@ -114,7 +114,7 @@ def monte_carlo_integrate(
     name: String.
 
   Returns:
-    A `GANLoss` instance.
+    A `MonteCarloIntegral` instance.
   """
   with tf.name_scope(name):
     with tf.name_scope('n_samples'):
