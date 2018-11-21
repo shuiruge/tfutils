@@ -56,6 +56,7 @@ class MonteCarloIntegral(object):
 def monte_carlo_integrate(
         integrands,
         axes=[0],
+        n_samples=None,
         name='monte_carlo_integrate'):
   r"""
   Definition:
@@ -94,21 +95,39 @@ def monte_carlo_integrate(
     integrand: Tensor.
     axes: Iterable of non-negative integers, as the axes to be integrated
       over.
+    n_samples: Positive integer, or `None`, as the `N` in the formula.
+      If the sample-shape is static, then put it as `None` and the number
+      of samples will be automatically computed. However, if the sample-shape
+      is dynamical, like being constructed by placeholder or by variable,
+      this argument must be fulfilled as an integer.
     name: String.
 
   Returns:
     A `MonteCarloIntegral` instance.
   """
   with tf.name_scope(name):
-    with tf.name_scope('n_samples'):
-      integrands_shape = integrands.get_shape().as_list()
 
-      sample_shape = []
-      for axis in axes:
-        sample_shape.append(integrands_shape[axis])
-
-      n_samples = np.product(sample_shape)
-      n_samples = tf.constant(n_samples, dtype=integrands.dtype)
+    if n_samples is None:
+      try:
+        with tf.name_scope('n_samples'):
+            integrands_shape = integrands.get_shape().as_list()
+            sample_shape = []
+            for axis in axes:
+              sample_shape.append(integrands_shape[axis])
+            n_samples = np.product(sample_shape)
+      except ValueError as e:
+        print('[ERROR]', e)
+        err_msg = ('Ensure that the sample-shape is static, not being '
+                   'placeholder nor variable. Otherwise, you should set '
+                   'the `n_samples` argument manually.')
+        err_msg += '\nPS: The integrand-samples are {}'.format(integrands)
+        raise NonStaticSampleShapeError(err_msg)
 
     mean, var = tf.nn.moments(integrands, axes)
+    n_samples = tf.cast(n_samples, dtype=integrands.dtype)
     return MonteCarloIntegral(value=mean, variance=(var / n_samples))
+
+
+class NonStaticSampleShapeError(Exception):
+  """Auxillary exception."""
+  pass
