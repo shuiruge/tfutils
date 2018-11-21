@@ -108,23 +108,24 @@ def monte_carlo_integrate(
   with tf.name_scope(name):
 
     if n_samples is None:
-      try:
-        with tf.name_scope('n_samples'):
-            integrands_shape = integrands.get_shape().as_list()
-            sample_shape = []
-            for axis in axes:
-              sample_shape.append(integrands_shape[axis])
-            n_samples = np.product(sample_shape)
-      except ValueError as e:
-        print('[ERROR]', e)
-        err_msg = ('Ensure that the sample-shape is static, not being '
-                   'placeholder nor variable. Otherwise, you should set '
-                   'the `n_samples` argument manually.')
-        err_msg += '\nPS: The integrand-samples are {}'.format(integrands)
-        raise NonStaticSampleShapeError(err_msg)
+      with tf.name_scope('n_samples'):
+        integrands_shape = integrands.get_shape().as_list()
+        sample_shape = []
+        for axis in axes:
+          sample_shape.append(integrands_shape[axis])
+        n_samples = np.product(sample_shape)
+
+    try:
+      n_samples = tf.cast(n_samples, dtype=integrands.dtype)
+    except ValueError as e:  # cannot cast a `None` value.
+      print('[ERROR]', e)
+      err_msg = ('Ensure that the sample-shape is static, not being '
+                 'placeholder nor variable. Otherwise, you should set '
+                 'the `n_samples` argument manually.')
+      err_msg += '\tPS: The integrand-samples are {}'.format(integrands)
+      raise NonStaticSampleShapeError(err_msg)
 
     mean, var = tf.nn.moments(integrands, axes)
-    n_samples = tf.cast(n_samples, dtype=integrands.dtype)
     return MonteCarloIntegral(value=mean, variance=(var / n_samples))
 
 
