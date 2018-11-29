@@ -17,19 +17,38 @@ class MonteCarloIntegral(object):
   """
 
   def __init__(self, value, variance):
-    value_errors = (value.shape != variance.shape,
-                    value.dtype != variance.dtype)
-    if any(value_errors):
+    if value.shape != variance.shape or value.dtype != variance.dtype:
       raise ValueError('The shape or the dtype of `value` and '
                        '`variance` is not the same.')
 
-    self.value = value
-    self.variance = variance
+    self._value = value
+    self._variance = variance
+    self._error = tf.sqrt(variance)
+    self._relative_error = self._error / (value + EPSILON)
 
-    self.shape = self.value.shape
-    self.dtype = self.value.dtype
-    self.error = tf.sqrt(self.variance)
-    self.relative_error = self.error / (self.value + EPSILON)
+  @property
+  def value(self):
+    return self._value
+
+  @property
+  def variance(self):
+    return self._variance
+
+  @property
+  def error(self):
+    return self._error
+
+  @property
+  def relative_error(self):
+    return self._relative_error
+
+  @property
+  def shape(self):
+    return self.value.shape
+
+  @property
+  def dtype(self):
+    return self.value.dtype
 
   def __add__(self, other):
     """
