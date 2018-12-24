@@ -1,5 +1,6 @@
 import numpy as np
 import tensorflow as tf
+from numbers import Real
 
 
 EPSILON = 1e-8
@@ -70,6 +71,13 @@ class MonteCarloIntegral(object):
 
     return MonteCarloIntegral(value=(self.value + other.value),
                               variance=(self.variance + other.variance))
+
+  def __mul__(self, other):
+    if not isinstance(other, Real):
+      raise TypeError('The `other` should be a `Real` object, but a'
+                      .format(type(other)))
+    return MonteCarloIntegral(value=(self.value * other),
+                              variance=(self.variance * tf.square(other)))
 
 
 def monte_carlo_integrate(
