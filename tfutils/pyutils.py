@@ -1,4 +1,5 @@
 import inspect
+import functools
 
 
 def inheritdocstring(cls):
@@ -69,6 +70,23 @@ def is_method(cls, attr_name):
     if hasattr(attr, '__call__'):  # thus being a method.
         return True
     return False
+
+
+def lazy_property(function):
+    """Decorator for lazy-property.
+
+    Forked from: https://danijar.com/structuring-your-tensorflow-models/
+    """
+    attribute = '_cache_' + function.__name__
+
+    @property
+    @functools.wraps(function)
+    def decorator(self):
+        if not hasattr(self, attribute):
+            setattr(self, attribute, function(self))
+        return getattr(self, attribute)
+
+    return decorator
 
 
 if __name__ == '__main__':
