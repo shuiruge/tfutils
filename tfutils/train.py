@@ -77,10 +77,8 @@ def restore_variables(session, scope, save_dir):
 
 def create_frugal_session(gpu_allocation=0.1):
   """Creates a session that occupies `gpu_allocation` percent GPU-memory only.
-
   Args:
     gpu_allocation: Float in range (0, 1].
-
   Returns:
     An instance of `tf.Session`.
   """
