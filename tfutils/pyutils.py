@@ -1,3 +1,4 @@
+import os
 import inspect
 import functools
 
@@ -89,40 +90,10 @@ def lazy_property(function):
     return decorator
 
 
-if __name__ == '__main__':
-
-    """Tests"""
-
-    class A(object):
-        """This is A."""
-
-        def method_1(self):
-            """This is method_1."""
-            pass
-
-    @inheritdocstring
-    class B(A):
-        """This is B."""
+def ensure_directory(path_to_dir):
+    """Creates the direcotry in path `path_to_dir` if not exists."""
+    try:
+        os.makedirs(path_to_dir)
+    except FileExistsError:
+        # Directory already exists, then noting to do.
         pass
-
-    @inheritdocstring
-    class C(A):
-        """This is C."""
-        def method_1(self):
-            """Override."""
-            pass
-
-        def method_2(self):
-            """New method."""
-
-    print(B.__doc__)
-    print('\n\n\n')
-
-    print(B.method_1.__doc__)
-    print('\n\n\n')
-
-    print(C.method_1.__doc__)
-    print('\n\n\n')
-
-    print(C.method_2.__doc__)
-    print('\n\n\n')
