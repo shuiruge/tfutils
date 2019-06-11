@@ -1,6 +1,7 @@
 import os
 import inspect
 import functools
+from typing import Iterable, List
 
 
 def inheritdocstring(cls):
@@ -97,3 +98,23 @@ def ensure_directory(path_to_dir):
     except FileExistsError:
         # Directory already exists, then noting to do.
         pass
+
+
+Batch = List[object]
+
+
+def chunck(size: int, elems: Iterable[object]) -> Iterable[Batch]:
+    """Yields batch of size `size` of the elements `elems`.
+
+    The last batch may have size smaller than `size` if and only if
+    `len(elems) // size != 0`.
+    """
+    batch, batch_size = [], 0
+    for elem in elems:
+        batch.append(elem)
+        batch_size += 1
+        if batch_size == size:
+            batch_to_yield = batch[:]
+            batch, batch_size = [], 0
+            yield batch_to_yield
+    yield batch
