@@ -131,7 +131,7 @@ class Timer(object):
         self._start = time.time()
         return self
 
-    def __exit__(self):
+    def __exit__(self, *args):
         self._end = time.time()
         self._interval = self._end - self._start
         if self._verbose:
