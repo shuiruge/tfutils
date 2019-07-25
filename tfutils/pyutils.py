@@ -1,4 +1,5 @@
 import os
+import time
 import inspect
 import functools
 from typing import Iterable, List
@@ -118,3 +119,17 @@ def chunck(size: int, elems: Iterable[object]) -> Iterable[Batch]:
             batch, batch_size = [], 0
             yield batch_to_yield
     yield batch
+
+
+class Timer(object):
+
+    def __enter__(self):
+        self.start = time.time()
+        return self
+
+    def __exit__(self, *args):
+        self.end = time.time()
+        self.interval = self.end - self.start
+
+    def __repr__(self):
+        return 'Cost {} secs.'.format(self.interval)
