@@ -123,13 +123,20 @@ def chunck(size: int, elems: Iterable[object]) -> Iterable[Batch]:
 
 class Timer(object):
 
+    def __init__(self, name='', verbose=True):
+        self._verbose = verbose
+        self._name = name
+
     def __enter__(self):
-        self.start = time.time()
+        self._start = time.time()
         return self
 
-    def __exit__(self, *args):
-        self.end = time.time()
-        self.interval = self.end - self.start
-
-    def __repr__(self):
-        return 'Cost {} secs.'.format(self.interval)
+    def __exit__(self):
+        self._end = time.time()
+        self._interval = self._end - self._start
+        if self._verbose:
+            if self._name:
+                print('=> {} costs {} secs.'
+                      .format(self._name, self._interval))
+            else:
+                print('=> Costs {} secs.'.format(self._interval))
