@@ -2,11 +2,12 @@ import os
 import time
 import inspect
 import functools
+import builtins
 from typing import Iterable, List
 
 
 def inheritdocstring(cls):
-    """Decorator for inherting docstring from parent class, for both the class
+    """Decorator for inheriting docstring from parent class, for both the class
     and its methods.
 
     Examples:
@@ -140,3 +141,12 @@ class Timer(object):
                       .format(self._name, self._interval))
             else:
                 print('=> Costs {} secs.'.format(self._interval))
+
+
+# C.f. https://stackoverflow.com/a/18229685
+try:
+    profile = builtins.profile
+except AttributeError:
+    # No line profiler, provide a pass-through version
+    def profile(func):
+        return func
