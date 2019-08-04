@@ -143,6 +143,15 @@ class Timer(object):
                 print('=> Costs {} secs.'.format(self._interval))
 
 
+# Auxillary function for vanishing the `NameError` caused by
+# employing `line_profiler` module in simple `python` run.
+#
+# Explicitly, the `line_profiler` needs a `@profile` decorator,
+# which runs under `kernprof` instead of `python`. While runing
+# under `python`, you have to manually remove the decorator,
+# otherwise a `NameError` raises. This function provides the
+# solution to this problem.
+#
 # C.f. https://stackoverflow.com/a/18229685
 try:
     profile = builtins.profile
